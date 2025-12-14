@@ -1,0 +1,22 @@
+{
+  "name": "My Tasks",
+  "short_name": "Tasks",
+  "theme_color": "#1d1d1f",
+  "background_color": "#1d1d1f",
+  "display": "standalone",
+  "orientation": "portrait",
+  "scope": "/",
+  "start_url": "/",
+  "icons": [
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
