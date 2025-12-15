@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -13,7 +13,7 @@ import {
 import CloseIcon from "@mui/icons-material/Close";
 import MinimizeIcon from "@mui/icons-material/Minimize";
 import { Category, Todo } from "@/types";
-import { addTodo } from "@/services/todoService";
+import { addTodo, updateTodo } from "@/services/todoService";
 
 interface Props {
   open: boolean;
@@ -23,6 +23,7 @@ interface Props {
   onTaskAdded: () => void;
   initialData?: Partial<Todo>;
   onDataChange: (data: Partial<Todo>) => void;
+  editId?: string | null; // NEW: To know if we are editing
 }
 
 export default function AddTaskModal({
@@ -33,13 +34,13 @@ export default function AddTaskModal({
   onTaskAdded,
   initialData,
   onDataChange,
+  editId,
 }: Props) {
   const [taskName, setTaskName] = useState("");
   const [description, setDescription] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [deadline, setDeadline] = useState("");
 
-  // 1. Hydrate from initialData ONLY when opening
   useEffect(() => {
     if (open) {
       setTaskName(initialData?.taskName || "");
@@ -51,28 +52,35 @@ export default function AddTaskModal({
           : ""
       );
     }
-  }, [open]); // Removed other dependencies to prevent re-hydration loops
-
-  // REMOVED: The useEffect that synced changes on every keystroke
+  }, [open, initialData, categories]); // Re-added deps cautiously (safe because open gates it)
 
   const handleSubmit = async () => {
     if (!taskName || !deadline || !categoryId) return;
 
-    await addTodo({
+    const payload = {
       taskName,
       description,
       categoryId,
       deadline: new Date(deadline).getTime(),
-      createdAt: new Date().getTime(),
-      isCompleted: false,
-    });
+    };
+
+    if (editId) {
+      // Update Mode
+      await updateTodo(editId, payload);
+    } else {
+      // Create Mode
+      await addTodo({
+        ...payload,
+        createdAt: Date.now(),
+        isCompleted: false,
+      });
+    }
 
     resetState();
     onTaskAdded();
     onClose();
   };
 
-  // 2. Only sync data to parent when minimizing
   const handleMinimize = () => {
     onDataChange({
       taskName,
@@ -92,7 +100,6 @@ export default function AddTaskModal({
     setTaskName("");
     setDescription("");
     setDeadline("");
-    // We don't clear draft data here, parent handles that
   };
 
   return (
@@ -104,7 +111,7 @@ export default function AddTaskModal({
           alignItems: "center",
         }}
       >
-        Add New Task
+        {editId ? "Edit Task" : "Add New Task"}
         <Box>
           <IconButton onClick={handleMinimize} sx={{ mr: 1 }}>
             <MinimizeIcon sx={{ mb: 1 }} />
@@ -116,8 +123,10 @@ export default function AddTaskModal({
       </DialogTitle>
       <DialogContent dividers>
         <Box display="flex" flexDirection="column" gap={2} mt={1}>
+          {/* 1. AUTO FOCUS ADDED HERE */}
           <TextField
             label="Task Name"
+            autoFocus
             fullWidth
             required
             inputProps={{ maxLength: 120 }}
@@ -173,7 +182,7 @@ export default function AddTaskModal({
           onClick={handleSubmit}
           disabled={!taskName || !deadline}
         >
-          Create Task
+          {editId ? "Save Changes" : "Create Task"}
         </Button>
       </DialogActions>
     </Dialog>

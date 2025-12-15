@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import {
   Card,
   CardContent,
@@ -7,15 +7,20 @@ import {
   Chip,
   IconButton,
   Tooltip,
-  Button,
-  TextField,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
+  TextField,
+  Button,
+  Menu,
+  MenuItem,
 } from "@mui/material";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
+import MoreVertIcon from "@mui/icons-material/MoreVert"; // NEW ICON
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
+import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import { formatDistanceToNow, format } from "date-fns";
 import { Todo, Category } from "@/types";
 
@@ -23,6 +28,8 @@ interface Props {
   todo: Todo;
   category?: Category;
   onComplete?: (id: string, comment: string) => void;
+  onEdit?: (todo: Todo) => void; // NEW PROP
+  onDelete?: (id: string) => void; // NEW PROP
   hideActions?: boolean;
 }
 
@@ -30,15 +37,19 @@ export default function TodoCard({
   todo,
   category,
   onComplete,
+  onEdit,
+  onDelete,
   hideActions = false,
 }: Props) {
   const [openCompleteModal, setOpenCompleteModal] = useState(false);
   const [comment, setComment] = useState("");
 
+  // Menu State
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const openMenu = Boolean(anchorEl);
+
   const formatTime = (time: number) => {
     const date = new Date(time);
-    // If less than 24h, use relative. Else logic handled by date-fns usually, but specific requirement:
-    // "2 days ago or 20 mins ago if less than a day" -> formatDistanceToNow handles this well.
     return formatDistanceToNow(date, { addSuffix: true });
   };
 
@@ -65,7 +76,7 @@ export default function TodoCard({
                     label={category.name}
                     size="small"
                     sx={{
-                      bgcolor: category.color + "40", // 40% opacity
+                      bgcolor: category.color + "40",
                       color: category.color,
                       border: `1px solid ${category.color}`,
                     }}
@@ -86,14 +97,49 @@ export default function TodoCard({
               )}
             </Box>
 
-            {!hideActions && (
-              <IconButton
-                color="success"
-                onClick={() => setOpenCompleteModal(true)}
-              >
-                <CheckCircleOutlineIcon fontSize="large" />
-              </IconButton>
-            )}
+            <Box display="flex">
+              <>
+                {!hideActions && (
+                  <IconButton
+                    color="success"
+                    onClick={() => setOpenCompleteModal(true)}
+                  >
+                    <CheckCircleOutlineIcon fontSize="large" />
+                  </IconButton>
+                )}
+
+                {/* 2. EDIT/DELETE MENU */}
+                <IconButton onClick={(e) => setAnchorEl(e.currentTarget)}>
+                  <MoreVertIcon />
+                </IconButton>
+                <Menu
+                  anchorEl={anchorEl}
+                  open={openMenu}
+                  onClose={() => setAnchorEl(null)}
+                >
+                  {!hideActions && (
+                    <MenuItem
+                      onClick={() => {
+                        setAnchorEl(null);
+                        onEdit?.(todo);
+                      }}
+                    >
+                      <EditOutlinedIcon fontSize="small" sx={{ mr: 1 }} /> Edit
+                    </MenuItem>
+                  )}
+
+                  <MenuItem
+                    onClick={() => {
+                      setAnchorEl(null);
+                      onDelete?.(todo.id);
+                    }}
+                    sx={{ color: "error.main" }}
+                  >
+                    <DeleteOutlineIcon fontSize="small" sx={{ mr: 1 }} /> Delete
+                  </MenuItem>
+                </Menu>
+              </>
+            </Box>
           </Box>
 
           <Box mt={2} display="flex" gap={2} flexWrap="wrap">
@@ -150,7 +196,6 @@ export default function TodoCard({
         </CardContent>
       </Card>
 
-      {/* Completion Modal */}
       <Dialog
         open={openCompleteModal}
         onClose={() => setOpenCompleteModal(false)}
@@ -162,9 +207,7 @@ export default function TodoCard({
           <TextField
             autoFocus
             margin="dense"
-            id="comment"
             label="Closing Comment (Optional)"
-            type="text"
             fullWidth
             variant="outlined"
             multiline
