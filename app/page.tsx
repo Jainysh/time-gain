@@ -12,6 +12,7 @@ import {
   Stack,
   CircularProgress,
   Badge,
+  Button,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
@@ -20,11 +21,13 @@ import { getTodos, completeTodo, deleteTodo } from "@/services/todoService";
 import { getCategories, seedCategories } from "@/services/categoryService";
 import TodoCard from "@/components/TodoCard";
 import AddTaskModal from "@/components/AddTaskModal";
+import { ClearAll, Today } from "@mui/icons-material";
 
 export default function Home() {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
+  const [filterApplied, setFilterApplied] = useState<string>("");
 
   // Sorting & Filtering State
   const [sortBy, setSortBy] = useState("deadline");
@@ -50,6 +53,7 @@ export default function Home() {
   };
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchData();
   }, []);
 
@@ -76,6 +80,18 @@ export default function Home() {
   // Logic for Sort/Filter
   const processedTodos = todos
     .filter((t) => (filterCat === "all" ? true : t.categoryId === filterCat))
+    .filter((t) => {
+      if (filterApplied === "today") {
+        const today = new Date();
+        const taskDate = new Date(t.deadline);
+        return (
+          taskDate.getDate() <= today.getDate() &&
+          taskDate.getMonth() === today.getMonth() &&
+          taskDate.getFullYear() === today.getFullYear()
+        );
+      }
+      return true;
+    })
     .sort((a, b) => {
       if (sortBy === "deadline") return a.deadline - b.deadline;
       if (sortBy === "created") return b.createdAt - a.createdAt;
@@ -101,7 +117,14 @@ export default function Home() {
 
   return (
     <Box>
-      <Box mb={3} display="flex" gap={2} flexWrap="wrap">
+      <Box
+        mb={1}
+        pt={1}
+        sx={{ overflowX: "auto" }}
+        display="flex"
+        alignItems="center"
+        gap={1}
+      >
         <FormControl size="small" sx={{ minWidth: 120 }}>
           <InputLabel>Sort By</InputLabel>
           <Select
@@ -131,15 +154,58 @@ export default function Home() {
             ))}
           </Select>
         </FormControl>
+
+        <Button
+          sx={{ minWidth: 80 }}
+          variant="outlined"
+          startIcon={<Today />}
+          color={filterApplied === "today" ? "primary" : "inherit"}
+          onClick={() => {
+            if (filterApplied === "today") {
+              setFilterApplied("");
+            } else {
+              setFilterApplied("today");
+            }
+          }}
+        >
+          Today
+        </Button>
       </Box>
 
       {loading ? (
         <CircularProgress sx={{ display: "block", mx: "auto", mt: 4 }} />
       ) : (
         <Stack spacing={0}>
+          <Box
+            display={"flex"}
+            justifyContent="space-between"
+            alignItems="center"
+            mb={1}
+          >
+            <Typography sx={{ paddingBottom: "4px" }}>
+              {processedTodos.length} active tasks
+            </Typography>
+            {filterApplied || filterCat !== "all" ? (
+              <Button
+                sx={{ minWidth: 100 }}
+                variant="text"
+                size="small"
+                onClick={() => {
+                  setFilterApplied("");
+                  setFilterCat("all");
+                }}
+                startIcon={<ClearAll />}
+              >
+                Clear Filters
+              </Button>
+            ) : null}
+          </Box>
           {processedTodos.length === 0 ? (
             <Typography textAlign="center" color="text.secondary">
-              No active tasks.
+              No active tasks.{" "}
+              {filterApplied || filterCat !== "all"
+                ? "Try clearing filters."
+                : "Add a new task to get started!"}
             </Typography>
           ) : null}
           {processedTodos.map((todo) => (

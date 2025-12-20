@@ -108,36 +108,46 @@ export default function TodoCard({
                   </IconButton>
                 )}
 
-                {/* 2. EDIT/DELETE MENU */}
-                <IconButton onClick={(e) => setAnchorEl(e.currentTarget)}>
-                  <MoreVertIcon />
-                </IconButton>
-                <Menu
-                  anchorEl={anchorEl}
-                  open={openMenu}
-                  onClose={() => setAnchorEl(null)}
-                >
-                  {!hideActions && (
-                    <MenuItem
-                      onClick={() => {
-                        setAnchorEl(null);
-                        onEdit?.(todo);
-                      }}
-                    >
-                      <EditOutlinedIcon fontSize="small" sx={{ mr: 1 }} /> Edit
-                    </MenuItem>
-                  )}
+                {hideActions && (
+                  <IconButton onClick={() => onDelete?.(todo.id)}>
+                    <DeleteOutlineIcon fontSize="small" />
+                  </IconButton>
+                )}
 
-                  <MenuItem
-                    onClick={() => {
-                      setAnchorEl(null);
-                      onDelete?.(todo.id);
-                    }}
-                    sx={{ color: "error.main" }}
-                  >
-                    <DeleteOutlineIcon fontSize="small" sx={{ mr: 1 }} /> Delete
-                  </MenuItem>
-                </Menu>
+                {/* 2. EDIT/DELETE MENU */}
+                {!hideActions && (
+                  <>
+                    <IconButton onClick={(e) => setAnchorEl(e.currentTarget)}>
+                      <MoreVertIcon />
+                    </IconButton>
+                    <Menu
+                      anchorEl={anchorEl}
+                      open={openMenu}
+                      onClose={() => setAnchorEl(null)}
+                    >
+                      <MenuItem
+                        onClick={() => {
+                          setAnchorEl(null);
+                          onEdit?.(todo);
+                        }}
+                      >
+                        <EditOutlinedIcon fontSize="small" sx={{ mr: 1 }} />{" "}
+                        Edit
+                      </MenuItem>
+
+                      <MenuItem
+                        onClick={() => {
+                          setAnchorEl(null);
+                          onDelete?.(todo.id);
+                        }}
+                        sx={{ color: "error.main" }}
+                      >
+                        <DeleteOutlineIcon fontSize="small" sx={{ mr: 1 }} />{" "}
+                        Delete
+                      </MenuItem>
+                    </Menu>
+                  </>
+                )}
               </>
             </Box>
           </Box>

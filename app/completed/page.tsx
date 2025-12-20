@@ -33,8 +33,11 @@ export default function CompletedPage() {
 
   return (
     <Box>
-      <Typography variant="h5" mb={3} fontWeight="bold">
+      <Typography variant="h5" mb={1} fontWeight="bold">
         Completed Tasks
+      </Typography>
+      <Typography sx={{ paddingBottom: "4px" }} color="textSecondary">
+        {todos.length} completed tasks
       </Typography>
       {todos.map((todo) => (
         <TodoCard

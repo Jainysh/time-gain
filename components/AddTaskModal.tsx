@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -56,6 +56,8 @@ export default function AddTaskModal({
 
   const handleSubmit = async () => {
     if (!taskName || !deadline || !categoryId) return;
+    // eslint-disable-next-line react-hooks/purity
+    const createdAt = Date.now();
 
     const payload = {
       taskName,
@@ -71,7 +73,7 @@ export default function AddTaskModal({
       // Create Mode
       await addTodo({
         ...payload,
-        createdAt: Date.now(),
+        createdAt: createdAt,
         isCompleted: false,
       });
     }
